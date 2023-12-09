@@ -10,6 +10,7 @@
 
 #include "HTTP_Server.h"
 #include "Routes.h"
+#include "hash_table.h"
 #include "Response.h"
 
 int main() {
@@ -19,15 +20,21 @@ int main() {
 
 	int client_socket;
 	
-	// registering Routes
-	struct Route * route = initRoute("/", "index.html"); 
-	addRoute(route, "/about", "about.html");
+
+	//create hash table and add routes
+	ht *routes = ht_create();
+	ht_set(routes, "/index", "index.html");
+	ht_set(routes, "/about", "about.html");
 
 
 	printf("\n====================================\n");
 	printf("=========ALL VAILABLE ROUTES========\n");
 	// display all available routes
-	inorder(route);
+	hti it = ht_iterator(routes);
+	while(ht_next(&it))
+	{
+		printf("KEY: %s, VALUE: %s\n", it.key, (char*)it.value);
+	}
 
 	while (1) {
 		char client_msg[4096] = "";
@@ -71,13 +78,15 @@ int main() {
 			//strcat(template, urlRoute+1);
 			strcat(template, "static/index.css");
 		}else {
-			struct Route * destination = search(route, urlRoute);
+			//struct Route * destination = search(route, urlRoute);
+			char *destination = ht_get(routes, urlRoute);
+			printf("%s\n", urlRoute);
 			strcat(template, "templates/");
 
 			if (destination == NULL) {
 				strcat(template, "404.html");
 			}else {
-				strcat(template, destination->value);
+				strcat(template, destination);
 			}
 		}
 
